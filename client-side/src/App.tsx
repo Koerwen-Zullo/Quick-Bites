@@ -1,7 +1,12 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+import AuthRoutes from "./routes/AuthRoutes";
 export default function HomePage() {
     return (
-        <div>
-        <h1>hello</h1>
-        </div>
+        <>
+            <Routes>
+                <Route path="/" element={<Navigate to="/auth/login" />} />
+                <Route path="/auth/*" element={<AuthRoutes />} />
+            </Routes>
+        </>
     );
 }
