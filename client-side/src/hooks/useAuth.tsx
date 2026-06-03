@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export function useAuth() {
+export function useAuthRegister() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const register = async (firstName: string, lastName: string, email: string, contactNumber: string, password: string) => {
@@ -11,21 +11,20 @@ export function useAuth() {
             // 2. Validation is now INSIDE the try block. 
             // If this throws an error, JavaScript jumps straight to the finally block below!
             if (!firstName || !lastName || !email || !contactNumber || !password) {
-                console.log("All fields are required");
                 throw new Error("All fields are required");
             }
 
+            const registerPayload = { firstName, lastName, contactNumber, email, password }
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ firstName, lastName, contactNumber, email, password }),
+                body: JSON.stringify({ registerPayload }),
             });
 
             if (!response.ok) {
                 const errorMessage = await response.text();
-                console.log(errorMessage);
                 throw new Error(errorMessage);
             }
 
@@ -44,4 +43,43 @@ export function useAuth() {
     };
 
     return { register, isLoading }
+}
+
+export function useAuthLogin() {
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const login = async (email: string, password: string) => {
+        setIsLoading(true)
+
+        try {
+            if (!email || !password) {
+                throw new Error("Invalid Email or Password");
+            }
+
+            const loginPayload = { email, password };
+
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ loginPayload }),
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                window.alert(errorMessage)
+                throw new Error(errorMessage)
+            }
+
+            const data = await response.json();
+            window.alert("Login Successful")
+            console.log(data)
+        } catch (err) {
+            throw err
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    return { isLoading, login };
 }

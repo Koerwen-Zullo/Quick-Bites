@@ -1,14 +1,22 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { useState } from "react";
+import { replace, useNavigate } from "react-router-dom";
+import { useAuthLogin } from "../../hooks/useAuth";
 
 export default function LoginPage() {
-  const navigate = useNavigate();
-
-  const { name, setName, password, setPassword } = useAuth();
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate("/auth/register");
+  const [email, setEmail] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
+  const { login, isLoading } = useAuthLogin()
+  const navigate = useNavigate()
+  const handleLogin = async (e: React.FormEvent) => {
+    try {
+      e.preventDefault();
+      await login(email, password);
+      setEmail('')
+      setPassword('')
+      navigate('/home')
+    } catch (err) {
+      console.log(err)
+    }
   };
 
   return (
@@ -17,12 +25,12 @@ export default function LoginPage() {
 
       <form onSubmit={handleLogin}>
         <div>
-          <label htmlFor="name">Username</label>
+          <label htmlFor="name">Email</label>
           <input
-            id="name"
+            id="email"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter username"
           />
         </div>
@@ -38,7 +46,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={isLoading}>Login</button>
       </form>
 
       <p>

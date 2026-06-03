@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuthRegister } from "../../hooks/useAuth";
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
     const [lastName, setLastName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [contactNumber, setContactNumber] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const { register, isLoading } = useAuth();
+    const { register, isLoading } = useAuthRegister();
     const navigate = useNavigate()
 
     const handleRegister = async (event: React.FormEvent) => {
@@ -35,7 +35,7 @@ export default function RegisterPage() {
                 <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
                 <input type="tel" placeholder="Contact Number" onChange={(e) => setContactNumber(e.target.value)} />
                 <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-                <button type="submit" onClick={handleRegister} disabled={isLoading}>Register</button>
+                <button type="submit" disabled={isLoading}>Register</button>
             </form>
         </>
 
