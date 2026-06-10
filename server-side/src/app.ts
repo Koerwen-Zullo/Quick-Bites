@@ -3,7 +3,6 @@ import cors from 'cors'
 import authRouter from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import "dotenv/config";
-import { Response, Request } from "express";
 const app = express();
 
 app.use(express.json());
@@ -17,9 +16,4 @@ app.use(
 );
 
 app.use("/api", authRouter);
-
-app.use((req: Request, res: Response, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
 export default app

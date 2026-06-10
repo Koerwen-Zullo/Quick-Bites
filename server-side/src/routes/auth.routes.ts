@@ -7,6 +7,6 @@ const authRouter: Router = express.Router();
 
 authRouter.post("/auth/register", registerController);
 authRouter.post("/auth/login", loginController);
-authRouter.post("/auth/me", authMiddleware, meController);
+authRouter.get("/auth/me", authMiddleware, meController);
 export default authRouter
 

@@ -4,29 +4,25 @@ import {
   registerValidation,
   loginValidation,
 } from "../validations/auth.validation.ts";
-import bcrypt from "bcrypt";
+import { hashPassword, verifyPassword } from "../utils/auth.utils.js";
 import jwt from "jsonwebtoken";
+
 export const registerController = async (req: Request, res: Response) => {
   try {
     const { firstName, lastName, contactNumber, email, password } =
       req.body.registerPayload;
 
-    const validateInput = registerValidation(
+    await registerValidation({
       firstName,
       lastName,
       contactNumber,
       email,
       password,
-    );
+    });
 
-    if (!validateInput) {
-      return res
-        .status(400)
-        .json({ message: "all fields are required to be filled" });
-    }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
-    await prisma.user.create({
+    const new_user = await prisma.user.create({
       data: {
         firstName,
         lastName,
@@ -37,8 +33,9 @@ export const registerController = async (req: Request, res: Response) => {
     });
 
     return res.status(200).json({ message: "Registered Successfully" });
-  } catch (err) {
-    console.log("Registration Failed");
+  } catch (error) {
+    if (error instanceof Error)
+      return res.status(400).json({ message: error.message });
   }
 };
 
@@ -60,7 +57,7 @@ export const loginController = async (req: Request, res: Response) => {
       throw 400;
     }
 
-    const checkPasswordHash = await bcrypt.compare(password, user.password);
+    const checkPasswordHash = await verifyPassword(password, user.password);
 
     if (!checkPasswordHash) {
       throw 400;
@@ -76,13 +73,12 @@ export const loginController = async (req: Request, res: Response) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 3600000,
     });
     return res.status(200).json({
       message: "Login Successfully",
-      token: token,
       user: user.id,
     });
   } catch (error) {
@@ -98,16 +94,20 @@ export const loginController = async (req: Request, res: Response) => {
 
 export const meController = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body.loginPayload;
-    const user = prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         id: req.userId,
       },
+      select: {
+        id: true,
+        email: true,
+      }
     })
-
-    return res.status(200).json({ message: "You are authenticated" });
-  } catch (err) {
-    console.log("You are not authenticated");
-    return res.status(500).json({ message: "You are not authenticated" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ message: "Authentication Failed" });
   }
-} 
+};

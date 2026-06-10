@@ -45,41 +45,4 @@ export function useAuthRegister() {
     return { register, isLoading }
 }
 
-export function useAuthLogin() {
-    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-    const login = async (email: string, password: string) => {
-        setIsLoading(true)
-
-        try {
-            if (!email || !password) {
-                throw new Error("Invalid Email or Password");
-            }
-
-            const loginPayload = { email, password };
-
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ loginPayload }),
-            });
-
-            if (!response.ok) {
-                const errorMessage = await response.text();
-                window.alert(errorMessage)
-                throw new Error(errorMessage)
-            }
-
-            const data = await response.json();
-            window.alert("Login Successful")
-            console.log(data)
-        } catch (err) {
-            throw err
-        } finally {
-            setIsLoading(false);
-        }
-    }
-    return { isLoading, login };
-}

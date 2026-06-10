@@ -1,19 +1,29 @@
-import { useState } from "react";
-import { replace, useNavigate } from "react-router-dom";
-import { useAuthLogin } from "../../hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/authContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
-  const { login, isLoading } = useAuthLogin()
+  const { login, user, isAuthLoading } = useAuth();
   const navigate = useNavigate()
+
+  if (isAuthLoading) {
+    return <div>Loading...</div>
+  }
+
+  if (user) {
+    navigate('/dashboard/book', { replace: true })
+  }
   const handleLogin = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
-      await login(email, password);
+      await login({ email, password });
       setEmail('')
       setPassword('')
-      navigate('/home')
+      if (user) {
+        navigate('/dashboard/book', { replace: true })
+      }
     } catch (err) {
       console.log(err)
     }
@@ -46,7 +56,7 @@ export default function LoginPage() {
           />
         </div>
 
-        <button type="submit" disabled={isLoading}>Login</button>
+        <button type="submit" disabled={isAuthLoading}>Login</button>
       </form>
 
       <p>

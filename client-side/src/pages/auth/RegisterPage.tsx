@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuthRegister } from "../../hooks/useAuth";
+import { useAuthRegister } from "../../hooks/AuthHooks";
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
     const [lastName, setLastName] = useState<string>('');
