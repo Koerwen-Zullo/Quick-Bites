@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { prisma } from "../config/database.js";
 import {
   registerValidation,
@@ -10,6 +10,7 @@ import {
   getJwtSecret,
 } from "../utils/auth.utils.js";
 import { SignJWT } from "jose";
+import { get } from "node:http";
 
 export const registerController = async (req: Request, res: Response) => {
   try {
@@ -114,3 +115,19 @@ export const meController = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Authentication Failed" });
   }
 };
+
+export const roomController = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const getAllRooms = await prisma.room.findMany({
+      orderBy: {
+        roomNumber: "asc"
+      },
+    })
+    if (getAllRooms.length === 0) {
+      return res.status(400).json({ message: "Rooms not found." })
+    }
+    return res.status(200).json({ data: getAllRooms })
+  } catch (error) {
+    next(error);
+  }
+}

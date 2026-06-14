@@ -5,7 +5,6 @@ import {
     type ReactNode,
     useEffect,
 } from "react";
-import LoginPage from "../pages/auth/LoginPage";
 
 interface User {
     id: number;
