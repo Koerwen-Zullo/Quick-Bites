@@ -1,25 +1,32 @@
-import { Response, Request, NextFunction } from "express"
-import jwt, { JwtPayload } from "jsonwebtoken";
+import { Response, Request, NextFunction } from "express";
+import { jwtVerify, errors } from "jose";
+import { getJwtSecret } from "../utils/auth.utils.js";
 
-interface CustomJWTPayload extends JwtPayload {
-    id: number
-}
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const token = req.cookies.token; // get token from cookie
+export const authMiddleware = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    const token = req.cookies.token;
     if (!token) {
         return res.status(401).json({ message: "Unauthorized" });
     }
+
     try {
+        const { payload } = await jwtVerify(token, getJwtSecret(), {
+            algorithms: ["HS256"],
+        });
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY as string) as CustomJWTPayload;
-        console.log(decoded);
-        req.userId = decoded.id;
+        if (typeof payload.id !== "number") {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
 
-        console.log("JWT Token Validated");
+        req.userId = payload.id;
         next();
     } catch (error) {
-        console.log("JWT Token Validation Failed");
-        return res.status(500).json({ message: "JWT Token Validation Failed" });
+        if (error instanceof errors.JOSEError) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        next(error);
     }
-
-}
+};

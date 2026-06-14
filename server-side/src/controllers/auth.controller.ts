@@ -4,8 +4,12 @@ import {
   registerValidation,
   loginValidation,
 } from "../validations/auth.validation.ts";
-import { hashPassword, verifyPassword } from "../utils/auth.utils.js";
-import jwt from "jsonwebtoken";
+import {
+  hashPassword,
+  verifyPassword,
+  getJwtSecret,
+} from "../utils/auth.utils.js";
+import { SignJWT } from "jose";
 
 export const registerController = async (req: Request, res: Response) => {
   try {
@@ -46,7 +50,7 @@ export const loginController = async (req: Request, res: Response) => {
     const verifyLogin = loginValidation(email, password);
 
     if (!verifyLogin) {
-      throw 400;
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const user = await prisma.user.findFirst({
@@ -54,22 +58,19 @@ export const loginController = async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      throw 400;
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const checkPasswordHash = await verifyPassword(password, user.password);
 
     if (!checkPasswordHash) {
-      throw 400;
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET_KEY as string,
-      {
-        expiresIn: "1h",
-      },
-    );
+    const token = await new SignJWT({ id: user.id })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("1h")
+      .sign(getJwtSecret());
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -82,18 +83,20 @@ export const loginController = async (req: Request, res: Response) => {
       user: user.id,
     });
   } catch (error) {
-    switch (error) {
-      case 400:
-        return res.status(400).json({ message: "Invalid email or password" });
-      default:
-        return res.status(500).json({ message: "Login Failed" });
-    }
+    if (error instanceof Error)
+      return res.status(400).json({ message: error.message });
+    return res.status(500).json({ message: "Login Failed" });
   }
 };
 
 
+
 export const meController = async (req: Request, res: Response) => {
   try {
+    if (req.userId === undefined) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const user = await prisma.user.findUnique({
       where: {
         id: req.userId,
