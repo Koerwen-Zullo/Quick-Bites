@@ -27,7 +27,6 @@ export default function BookRoomPage() {
 
             const resJson = await response.json();
 
-            console.log(resJson)
             setRooms(resJson);
         } catch (error) {
             console.log(error);
