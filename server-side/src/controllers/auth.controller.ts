@@ -65,6 +65,7 @@ export const loginController = async (req: Request, res: Response) => {
     const checkPasswordHash = await verifyPassword(password, user.password);
 
     if (!checkPasswordHash) {
+      console.log("Invalid password nigga")
       return res.status(400).json({ message: "Invalid email or password" });
     }
 

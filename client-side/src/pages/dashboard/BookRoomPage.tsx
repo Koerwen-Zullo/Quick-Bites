@@ -12,6 +12,19 @@ interface roomData {
 export default function BookRoomPage() {
     const [rooms, setRooms] = useState<roomData | null>(null);
 
+    const [isMobile, setIsMobile] = useState<boolean>(false);
+
+    useEffect(() => {
+        const ua = navigator.userAgent;
+
+        if (ua.includes("Mobile") || ua.includes("Android")) {
+            setIsMobile(true);
+        } else {
+            setIsMobile(false);
+        }
+    }, [isMobile]);
+
+
     const handleRoomData = async () => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/rooms`, {
@@ -41,6 +54,7 @@ export default function BookRoomPage() {
         <>
             <div>
                 <h1>BookRoomPage</h1>
+                <h1>isMobile: {isMobile ? "true" : "false"}</h1>
             </div>
             <div>
                 <h1>show all rooms</h1>

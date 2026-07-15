@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const login = async (credentials: { email: string; password: string }) => {
+
         const { email, password } = credentials;
         if (!email || !password) {
             throw new Error("All fields are required");
@@ -75,9 +76,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                     body: JSON.stringify({ loginPayload: { email, password } }),
                 },
             );
+
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error("Login failed");
+                throw new Error(data.message);
+
             }
+
             await checkAuthStatus();
         } catch (error) {
             throw error;

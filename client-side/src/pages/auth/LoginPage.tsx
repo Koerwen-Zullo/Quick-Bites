@@ -5,6 +5,7 @@ import { useAuth } from "../../context/authContext";
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
+  const [messageConfirmation, setMessageConfirmation] = useState<string>("")
   const { login, user, isAuthLoading } = useAuth();
   const navigate = useNavigate()
 
@@ -16,16 +17,20 @@ export default function LoginPage() {
     navigate('/dashboard/book', { replace: true })
   }
   const handleLogin = async (e: React.FormEvent) => {
+    setMessageConfirmation('')
     try {
       e.preventDefault();
       await login({ email, password });
       setEmail('')
       setPassword('')
+      setMessageConfirmation("Login Success")
       if (user) {
         navigate('/dashboard/book', { replace: true })
       }
     } catch (err) {
-      console.log(err)
+      if (err instanceof Error) {
+        setMessageConfirmation(err.message);
+      }
     }
   };
 
@@ -65,6 +70,7 @@ export default function LoginPage() {
           Register
         </button>
       </p>
+      {messageConfirmation}
     </div>
   );
 }
