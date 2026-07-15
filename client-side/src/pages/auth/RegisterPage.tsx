@@ -1,28 +1,32 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuthRegister } from "../../hooks/AuthHooks";
+import { useAuth } from "../../context/authContext";
 export default function RegisterPage() {
     const [firstName, setFirstName] = useState<string>('');
     const [lastName, setLastName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [contactNumber, setContactNumber] = useState<string>('');
     const [password, setPassword] = useState<string>('');
-    const { register, isLoading } = useAuthRegister();
+    const [messageConfirmation, setMessageConfirmation] = useState<string>('');
+    const { register, isAuthLoading } = useAuth();
     const navigate = useNavigate()
+
 
     const handleRegister = async (event: React.FormEvent) => {
         try {
             event.preventDefault();
-            await register(firstName, lastName, email, contactNumber, password);
+            await register({ firstName, lastName, email, contactNumber, password });
             setFirstName('');
             setLastName('');
             setEmail('');
             setContactNumber('');
             setPassword('');
             navigate("/auth/login");
+            window.alert("Registration successful");
         } catch (err) {
-            console.log(err);
-
+            if (err instanceof Error) {
+                setMessageConfirmation(err.message);
+            }
         }
     }
 
@@ -35,8 +39,10 @@ export default function RegisterPage() {
                 <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
                 <input type="tel" placeholder="Contact Number" onChange={(e) => setContactNumber(e.target.value)} />
                 <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
-                <button type="submit" disabled={isLoading}>Register</button>
+                <button type="submit" disabled={isAuthLoading}>Register</button>
             </form>
+            <br />
+            <p>{messageConfirmation}</p>
         </>
 
     )
