@@ -10,7 +10,17 @@ import {
   getJwtSecret,
 } from "../utils/auth.utils.js";
 import { SignJWT } from "jose";
-import { get } from "node:http";
+import { generateRefreshToken, hashToken } from "../utils/refreshToken.ts";
+import { rotateRefreshToken } from "../services/auth.services.ts";
+import {
+  ACCESS_TOKEN_EXPIRY,
+  SESSION_TOKEN_EXPIRY,
+  SESSION_TOKEN_MAX_AGE,
+  clearRefreshTokenCookie,
+  clearAuthCookies,
+  setAccessTokenCookie,
+  setRefreshTokenCookie,
+} from "../utils/authCookies.ts";
 
 export const registerController = async (req: Request, res: Response) => {
   try {
@@ -46,7 +56,7 @@ export const registerController = async (req: Request, res: Response) => {
 
 export const loginController = async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body.loginPayload;
+    const { email, password, rememberMe } = req.body.loginPayload;
 
     const verifyLogin = loginValidation(email, password);
 
@@ -65,24 +75,45 @@ export const loginController = async (req: Request, res: Response) => {
     const checkPasswordHash = await verifyPassword(password, user.password);
 
     if (!checkPasswordHash) {
-      console.log("Invalid password nigga")
+      console.log("Invalid email or password")
       return res.status(400).json({ message: "Invalid email or password" });
     }
+    if (rememberMe) {
+      const accessToken = await new SignJWT({ id: user.id })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime(ACCESS_TOKEN_EXPIRY)
+        .sign(getJwtSecret());
 
-    const token = await new SignJWT({ id: user.id })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("1h")
-      .sign(getJwtSecret());
+      const refreshToken = generateRefreshToken();
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 3600000,
-    });
+      await prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashToken(refreshToken),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          isPersistent: true,
+        },
+      });
+
+      setAccessTokenCookie(res, accessToken);
+      setRefreshTokenCookie(res, refreshToken);
+      console.log("refresh token set", ACCESS_TOKEN_EXPIRY);
+    } else {
+      const accessToken = await new SignJWT({ id: user.id })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime(SESSION_TOKEN_EXPIRY)
+        .sign(getJwtSecret());
+
+      clearRefreshTokenCookie(res);
+      setAccessTokenCookie(res, accessToken, SESSION_TOKEN_MAX_AGE);
+    }
+
     return res.status(200).json({
       message: "Login Successfully",
-      user: user.id,
+      user: {
+        id: user.id,
+        email: user.email,
+      },
     });
   } catch (error) {
     if (error instanceof Error)
@@ -91,7 +122,36 @@ export const loginController = async (req: Request, res: Response) => {
   }
 };
 
+export const refreshTokenController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
 
+    if (!refreshToken) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const tokens = await rotateRefreshToken(refreshToken);
+
+    if (!tokens) {
+      clearAuthCookies(res);
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+    setAccessTokenCookie(res, tokens.accessToken);
+    setRefreshTokenCookie(res, tokens.refreshToken);
+
+    return res.status(200).json({
+      message: "Tokens refreshed",
+    });
+  } catch {
+    return res.status(500).json({
+      message: "Refresh failed",
+    });
+  }
+};
 
 export const meController = async (req: Request, res: Response) => {
   try {
@@ -117,6 +177,26 @@ export const meController = async (req: Request, res: Response) => {
   }
 };
 
+
+export const logoutController = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (refreshToken) {
+    await prisma.refreshToken.updateMany({
+      where: {
+        tokenHash: hashToken(refreshToken),
+        revokedAt: null
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+    console.log("refresh token revoked");
+  }
+
+  clearAuthCookies(res);
+  return res.status(200).json({ message: "Logout Successfully" });
+}
 export const roomController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const getAllRooms = await prisma.room.findMany({

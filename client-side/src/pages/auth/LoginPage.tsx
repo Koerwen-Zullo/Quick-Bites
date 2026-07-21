@@ -5,28 +5,33 @@ import { useAuth } from "../../context/authContext";
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
+  const [rememberMe, setRememberMe] = useState<boolean>(false)
   const [messageConfirmation, setMessageConfirmation] = useState<string>("")
   const { login, user, isAuthLoading } = useAuth();
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isAuthLoading && user) {
+      navigate("/dashboard/book", { replace: true });
+    }
+  }, [isAuthLoading, user, navigate]);
 
   if (isAuthLoading) {
     return <div>Loading...</div>
   }
 
   if (user) {
-    navigate('/dashboard/book', { replace: true })
+    return null;
   }
   const handleLogin = async (e: React.FormEvent) => {
     setMessageConfirmation('')
     try {
       e.preventDefault();
-      await login({ email, password });
+      await login({ email, password, rememberMe });
       setEmail('')
       setPassword('')
       setMessageConfirmation("Login Success")
-      if (user) {
-        navigate('/dashboard/book', { replace: true })
-      }
+      navigate('/dashboard/book', { replace: true })
     } catch (err) {
       if (err instanceof Error) {
         setMessageConfirmation(err.message);
@@ -60,7 +65,14 @@ export default function LoginPage() {
             placeholder="Enter password"
           />
         </div>
-
+        <div>
+          <label htmlFor="remember-me">Remember me</label>
+          <input
+            id="remember-me"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)} />
+        </div>
         <button type="submit" disabled={isAuthLoading}>Login</button>
       </form>
 

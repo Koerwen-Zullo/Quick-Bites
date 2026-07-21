@@ -1,32 +1,67 @@
-import { Response, Request, NextFunction } from "express";
-import { jwtVerify, errors } from "jose";
-import { getJwtSecret } from "../utils/auth.utils.js";
+import type { NextFunction, Request, Response } from "express";
+import { jwtVerify } from "jose";
+import { getJwtSecret } from "../utils/auth.utils.ts";
+import { rotateRefreshToken } from "../services/auth.services.ts";
+import {
+    clearAuthCookies,
+    setAccessTokenCookie,
+    setRefreshTokenCookie,
+} from "../utils/authCookies.ts";
 
-export const authMiddleware = async (
+const tryRefreshSession = async (
+    req: Request,
+    res: Response,
+): Promise<number | null> => {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+        return null;
+    }
+
+    const tokens = await rotateRefreshToken(refreshToken);
+
+    if (!tokens) {
+        clearAuthCookies(res);
+        return null;
+    }
+
+    setAccessTokenCookie(res, tokens.accessToken);
+    setRefreshTokenCookie(res, tokens.refreshToken);
+
+    return tokens.userId;
+};
+
+export const authenticate = async (
     req: Request,
     res: Response,
     next: NextFunction,
 ) => {
-    const token = req.cookies?.token;
-    if (!token) {
-        return res.status(401).json({ message: "Unauthorized, Token is required" });
+    const accessToken = req.cookies?.token;
+
+    if (accessToken) {
+        try {
+            const result = await jwtVerify(accessToken, getJwtSecret());
+            req.userId = result.payload.id as number;
+            return next();
+        } catch {
+            const userId = await tryRefreshSession(req, res);
+
+            if (userId === null) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
+
+            req.userId = userId;
+            console.log("successfully refreshed session", userId);
+            return next();
+        }
     }
 
-    try {
-        const { payload } = await jwtVerify(token, getJwtSecret(), {
-            algorithms: ["HS256"],
-        });
+    const userId = await tryRefreshSession(req, res);
 
-        if (typeof payload.id !== "number") {
-            return res.status(401).json({ message: "Unauthorized, Invalid token" });
-        }
-
-        req.userId = payload.id;
-        next();
-    } catch (error) {
-        if (error instanceof errors.JOSEError) {
-            return res.status(401).json({ message: "Unauthorized, Invalid token" });
-        }
-        next(error);
+    if (userId === null) {
+        return res.status(401).json({ message: "Unauthorized" });
     }
+
+    req.userId = userId;
+    next();
 };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-
+import { useAuth } from "../../context/authContext";
+import { authFetch } from "../../utils/authFetch";
 interface roomData {
     data: {
         id: number;
@@ -13,7 +14,7 @@ export default function BookRoomPage() {
     const [rooms, setRooms] = useState<roomData | null>(null);
 
     const [isMobile, setIsMobile] = useState<boolean>(false);
-
+    const { logout } = useAuth()
     useEffect(() => {
         const ua = navigator.userAgent;
 
@@ -27,12 +28,8 @@ export default function BookRoomPage() {
 
     const handleRoomData = async () => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/rooms`, {
+            const response = await authFetch("/api/auth/rooms", {
                 method: "GET",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                }
             });
             if (!response.ok) {
                 throw new Error("Failed to fetch")
@@ -46,6 +43,13 @@ export default function BookRoomPage() {
         }
     }
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.log(error);
+        }
+    }
     useEffect(() => {
         handleRoomData();
     }, [])
@@ -69,6 +73,9 @@ export default function BookRoomPage() {
             </div >
             <div>
                 {!rooms && <p>failed to retrieve rooms</p>}
+            </div>
+            <div>
+                <button onClick={handleLogout}>Logout</button>
             </div>
         </>
     )

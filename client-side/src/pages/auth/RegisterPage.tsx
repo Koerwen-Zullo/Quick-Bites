@@ -8,7 +8,7 @@ export default function RegisterPage() {
     const [contactNumber, setContactNumber] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [messageConfirmation, setMessageConfirmation] = useState<string>('');
-    const { register, isAuthLoading } = useAuth();
+    const { register, isAuthLoading, user } = useAuth();
     const navigate = useNavigate()
 
 
@@ -21,8 +21,8 @@ export default function RegisterPage() {
             setEmail('');
             setContactNumber('');
             setPassword('');
-            navigate("/auth/login");
-            window.alert("Registration successful");
+            console.log("You are authenticated");
+            navigate('/dashboard/book', { replace: true })
         } catch (err) {
             if (err instanceof Error) {
                 setMessageConfirmation(err.message);
