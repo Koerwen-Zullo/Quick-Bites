@@ -1,9 +1,9 @@
 import { Route, Routes } from "react-router-dom";
-import BookRoomPage from "../pages/dashboard/BookRoomPage.tsx";
+import DashboardPage from "../pages/dashboard/DashboardPage";
 export default function DashboardRoutes() {
     return (
         <Routes>
-            <Route path="book" element={<BookRoomPage />} />
+            <Route path="home" element={<DashboardPage />} />
         </Routes>
     )
 }

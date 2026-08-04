@@ -207,7 +207,9 @@ export const roomController = async (req: Request, res: Response, next: NextFunc
     if (getAllRooms.length === 0) {
       return res.status(400).json({ message: "Rooms not found." })
     }
+    console.log("rooms retrieved")
     return res.status(200).json({ data: getAllRooms })
+    
   } catch (error) {
     next(error);
   }

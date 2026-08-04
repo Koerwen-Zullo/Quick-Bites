@@ -10,7 +10,8 @@
     "dev": "cross-env NODE_ENV=development tsx watch src/server.ts",
     "build": "tsc",
     "start": "cross-env NODE_ENV=development node dist/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "prisma generate" 
   },
   "dependencies": {
     "@prisma/adapter-pg": "^6.19.3",

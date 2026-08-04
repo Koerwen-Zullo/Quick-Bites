@@ -16,5 +16,5 @@ app.use(
   }),
 );
 app.use("/api", authRouter);
-app.use(errorMiddleware)
-export default app
+app.use(errorMiddleware);
+export default app;

@@ -112,7 +112,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!email || !password) {
             throw new Error("All fields are required");
         }
-        authCheckId.current += 1;
 
         try {
             const response = await authFetch("/api/auth/login", {
@@ -120,11 +119,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 body: JSON.stringify({ loginPayload: { email, password, rememberMe } }),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.message);
+                throw new Error("Failed to login");
             }
+
+            const data = await response.json();
 
             setUser(data.user);
             setIsAuthLoading(false);

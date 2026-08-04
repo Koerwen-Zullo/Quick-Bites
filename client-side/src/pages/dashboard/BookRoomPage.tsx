@@ -77,6 +77,7 @@ export default function BookRoomPage() {
             <div>
                 <button onClick={handleLogout}>Logout</button>
             </div>
+            
         </>
     )
 }

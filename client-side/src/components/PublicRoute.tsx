@@ -4,7 +4,7 @@ export default function PublicRoute(): React.JSX.Element {
     const { user } = useAuth();
     if (user) {
         console.log("You are authenticated");
-        return <Navigate to="/dashboard/book" />;
+        return <Navigate to="/dashboard/home" />;
     }
     return <Outlet />;
 }
