@@ -45,11 +45,48 @@ body {
 }
 
 .add-button:hover {
-    background-color: rgb(116, 7, 7);
+  background-color: rgb(116, 7, 7);
 }
 
 @media (max-width: 768px) {
-    .button-container > .border-container {
-        flex-direction: column;
-    }
+  .button-container > .border-container {
+    flex-direction: column;
+  }
+}
+
+.App {
+  position: relative;
+  text-align: center;
+}
+
+.modal-container {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0, 0, 0, 0.5);
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transition: opacity 0.3s ease;
+}
+
+.modal-container.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal {
+  transform: translateY(-100px);
+  transition: transform 0.3s ease;
+}
+
+.modal-container.open .modal {
+  transform: translateY(0);
 }

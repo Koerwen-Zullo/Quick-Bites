@@ -1,6 +1,5 @@
 import "../../assets/css/DashboardPage.css";
 import { useEffect, useState } from "react";
-
 const sampleData = [
   {
     id: 1,
@@ -43,11 +42,17 @@ const sampleData = [
     alt: "dog-training-dog-5",
   },
 ];
+
 const addMoreItemsImgUrl =
   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPblBR1hoKwsZrvdOhYLSTlc51uhZT2YwhMxnlJWdaoQ&s=10";
 
 export default function DashboardPage() {
   const [data, setData] = useState(sampleData);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const addMoreItemsImgUrl =
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQPblBR1hoKwsZrvdOhYLSTlc51uhZT2YwhMxnlJWdaoQ&s=10";
+
   return (
     <div className="button-container">
       <div className="border-container">
@@ -59,11 +64,19 @@ export default function DashboardPage() {
         ))}
         <br />
         <div className="add-button-container">
-          <button className="add-button">+</button>
+          <button className="add-button" onClick={() => setIsOpen(true)}>
+            +
+          </button>
+        </div>
+        <div className={`modal-container ${isOpen ? "open" : ""}`}>
+          <div className="modal">
+            <h2>Modal Title</h2>
+            <p>modaltest</p>
+
+            <button onClick={() => setIsOpen(false)}>Close</button>
+          </div>
         </div>
       </div>
-      
     </div>
-    
   );
 }
